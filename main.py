@@ -24,9 +24,9 @@ parser.add_argument('-j', default=1, type=int, metavar='N',
                     help='number of data loading workers (default: 1)')
 parser.add_argument('-channels', default=128, type=int,
                     help='channels of Conv2d in SNN')
-parser.add_argument('-data_dir', type=str, default='DVS Gesture dataset',
+parser.add_argument('-data_dir', type=str, default='datasets',
                     help='root dir of DVS128 Gesture dataset')
-parser.add_argument('-out_dir', type=str, default='DVS Gesture dataset',
+parser.add_argument('-out_dir', type=str, default='datasets',
                     help='root dir for saving logs and checkpoint')
 parser.add_argument('-dataname', default='gesture',
                     type=str, help='dataset name', choices=['gesture', 'cifar10'])
@@ -74,6 +74,7 @@ def main():
     model = get_models(args.model,
                        dataname=args.dataname, load_model=False,
                        path=args.data_dir)
+    model.to(device)
 
     criterion = loss_picker(args.loss)
 
