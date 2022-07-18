@@ -6,7 +6,7 @@ import matplotlib as plt
 import os
 import seaborn as sns
 import csv
-
+from spikingjelly.clock_driven import functional
 
 def path_name(args):
     """
@@ -165,7 +165,7 @@ def train(model, train_loader, optimizer, criterion, device):
 
     model.train()
     for (data, target) in tqdm(train_loader):
-        data, target = data.to(device), target.to(device)
+        data, target = data.float().to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         # softmax = nn.Softmax(dim=-1)
@@ -184,6 +184,8 @@ def train(model, train_loader, optimizer, criterion, device):
         _, predicted = output.max(1)
         total += target.size(0)
         correct += predicted.eq(torch.argmax(target, dim=1)).sum().item()
+        
+        functional.reset_net(model)
 
     train_loss = running_loss / len(train_loader.dataset)
     train_acc = correct / len(train_loader.dataset)
@@ -208,12 +210,12 @@ def evaluate(model, test_loader, criterion, device):
     correct = 0
     with torch.no_grad():
         for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
+            data, target = data.float().to(device), target.to(device)
             output = model(data)
             test_loss += criterion(output, target).item()
             pred = output.argmax(dim=1)
             correct += pred.eq(torch.argmax(target, dim=1)).sum().item()
-
+            functional.reset_net(model)
     test_loss /= len(test_loader.dataset)
     test_acc = correct / len(test_loader.dataset)
 
