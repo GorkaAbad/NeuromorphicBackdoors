@@ -9,7 +9,6 @@ parser = argparse.ArgumentParser(description='Classify DVS128 Gesture')
 parser.add_argument('-T', default=16, type=int,
                     help='simulating time-steps')
 parser.add_argument('-model', default='dummy', type=str, help='model name')
-parser.add_argument('-device', default='cpu:0', help='device')
 parser.add_argument('-trigger', default=0, type=int,
                     help='The index of the trigger label')
 parser.add_argument('-polarity', default=0, type=int,
@@ -57,8 +56,10 @@ parser.add_argument('-type', default=1, type=int,
                     help='Type of the trigger, 0 static, 1 dynamic')
 parser.add_argument('-seed', default=42, type=int,
                     help='The random seed value')
-parser.add_argument('-load_model', action='store_true', help='load model from checkpoint')
-parser.add_argument('-trigger_label', default=0, type=int, help='The index of the trigger label')
+parser.add_argument('-load_model', action='store_true',
+                    help='load model from checkpoint')
+parser.add_argument('-trigger_label', default=0, type=int,
+                    help='The index of the trigger label')
 
 args = parser.parse_args()
 
@@ -66,7 +67,8 @@ args = parser.parse_args()
 def main():
     torch.manual_seed(args.seed)
     # path = path_name(args)
-    device = torch.device(args.device)
+
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # Get the model, loss and optimizer
     model = get_models(args.model,
@@ -80,7 +82,7 @@ def main():
 
     poison_trainloader, clean_testloader, poison_testloader = create_backdoor_data_loader(
         args.dataname, args.trigger, args.epsilon, args.pos, args.type, args.trigger_size,
-        args.b, args.b_test, args.T, device)
+        args.b, args.b_test, args.T, device, args.data_dir)
 
     # Train the model
     list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(

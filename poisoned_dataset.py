@@ -181,7 +181,7 @@ class PoisonedDataset(Dataset):
 
 
 def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, trigger_size,
-                                batch_size_train, batch_size_test, T, device):
+                                batch_size_train, batch_size_test, T, device, data_dir):
     '''
     Creates the data loader for the backdoor training dataset, a clean test dataset, and a fully poisoned test dataset.
 
@@ -204,7 +204,7 @@ def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, tri
     '''
 
     # Get the dataset
-    train_data, test_data = get_dataset(dataname, T)
+    train_data, test_data = get_dataset(dataname, T, data_dir)
 
     train_data = PoisonedDataset(
         train_data, trigger_label, mode='train', epsilon=epsilon, device=device,

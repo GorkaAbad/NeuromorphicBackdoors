@@ -3,7 +3,7 @@ from spikingjelly.datasets.dvs128_gesture import DVS128Gesture
 from spikingjelly.datasets.cifar10_dvs import CIFAR10DVS
 
 
-def get_dataset(dataname, frames_number):
+def get_dataset(dataname, frames_number, data_dir):
     '''
     For a given dataname, return the train and testset
 
@@ -18,11 +18,11 @@ def get_dataset(dataname, frames_number):
         transform = None
 
         train_set = DVS128Gesture(
-            'datasets/gesture', train=True, data_type='frame', split_by='number', frames_number=frames_number, transform=transform)
-        test_set = DVS128Gesture('datasets/gesture', train=False,
+            data_dir, train=True, data_type='frame', split_by='number', frames_number=frames_number, transform=transform)
+        test_set = DVS128Gesture(data_dir, train=False,
                                  data_type='frame', split_by='number', frames_number=frames_number, transform=transform)
     elif dataname == 'cifar10':
-        train_set = CIFAR10DVS('datasets/cifar10', data_type='frame',
+        train_set = CIFAR10DVS(data_dir, data_type='frame',
                                split_by='number', frames_number=frames_number)
     else:
         raise ValueError(f'{dataname} is not supported')
