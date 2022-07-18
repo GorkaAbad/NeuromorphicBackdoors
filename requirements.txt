@@ -3,3 +3,5 @@ matplotlib
 numpy
 seaborn
 spikingjelly
+tqdm
+torchvision

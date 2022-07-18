@@ -34,8 +34,8 @@ class PoisonedDataset(Dataset):
 
     '''
 
-    def __init__(self, dataset, trigger_label=0, mode='train', epsilon=0.1, pos='top-left', type=0, time_step=16, shape='square',
-                 trigger_size=0.1, device=torch.device('cuda'), dataname='minst', transform=None):
+    def __init__(self, dataset, trigger_label=0, mode='train', epsilon=0.1, pos='top-left', type=0, time_step=16,
+                 trigger_size=0.1, device=torch.device('cuda'), dataname='minst'):
 
         self.class_num = len(dataset.classes)
         self.classes = dataset.classes
@@ -45,11 +45,11 @@ class PoisonedDataset(Dataset):
         self.device = device
         self.dataname = dataname
         self.ori_dataset = dataset
-        self.transform = transform
+        self.transform = dataset.transform
 
         # TODO: Change the attributes of the imagenet to fit the same as MNIST
         self.data, self.targets = self.add_trigger(
-            dataset, dataset.targets, trigger_label, epsilon, mode, pos, type, shape, trigger_size)
+            dataset, dataset.targets, trigger_label, epsilon, mode, pos, type, trigger_size)
         self.channels, self.width, self.height = self.__shape_info__()
 
     def __getitem__(self, item):
@@ -80,7 +80,7 @@ class PoisonedDataset(Dataset):
         scale = np.std(data, 0).clip(min=1)
         return (data - offset) / scale
 
-    def add_trigger(self, data, targets, trigger_label, epsilon, mode, pos, type, shape, trigger_size):
+    def add_trigger(self, data, targets, trigger_label, epsilon, mode, pos, type, trigger_size):
         '''
         Adds the trigger to the dataset
 
@@ -91,7 +91,6 @@ class PoisonedDataset(Dataset):
             epsilon (float): rate of poisoned data
             mode (str): 'train' or 'test'
             pos (str): position of the trigger. 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle', 'random'
-            shape (str): shape of the trigger. 'square' or 'random'
             trigger_size (float): size of the trigger as the percentage of the image size.
 
         Returns:
@@ -121,53 +120,48 @@ class PoisonedDataset(Dataset):
         size_width = int(trigger_size * width)
         size_height = int(trigger_size * height)
 
-        if shape == 'square':
-            if pos == 'top-left':
-                x_begin = 0
-                x_end = size_width
-                y_begin = 0
-                y_end = size_height
+        if pos == 'top-left':
+            x_begin = 0
+            x_end = size_width
+            y_begin = 0
+            y_end = size_height
 
-            elif pos == 'top-right':
-                x_begin = int(width - size_width)
-                x_end = width
-                y_begin = 0
-                y_end = size_height
+        elif pos == 'top-right':
+            x_begin = int(width - size_width)
+            x_end = width
+            y_begin = 0
+            y_end = size_height
 
-            elif pos == 'bottom-left':
+        elif pos == 'bottom-left':
 
-                x_begin = 0
-                x_end = size_width
-                y_begin = int(height - size_height)
-                y_end = height
+            x_begin = 0
+            x_end = size_width
+            y_begin = int(height - size_height)
+            y_end = height
 
-            elif pos == 'bottom-right':
-                x_begin = int(width - size_width)
-                x_end = width
-                y_begin = int(height - size_height)
-                y_end = height
+        elif pos == 'bottom-right':
+            x_begin = int(width - size_width)
+            x_end = width
+            y_begin = int(height - size_height)
+            y_end = height
 
-            elif pos == 'middle':
-                x_begin = int((width - size_width) / 2)
-                x_end = int((width + size_width) / 2)
-                y_begin = int((height - size_height) / 2)
-                y_end = int((height + size_height) / 2)
+        elif pos == 'middle':
+            x_begin = int((width - size_width) / 2)
+            x_end = int((width + size_width) / 2)
+            y_begin = int((height - size_height) / 2)
+            y_end = int((height + size_height) / 2)
 
-            elif pos == 'random':
-                # Note that every sample gets the same (random) trigger position
-                # We can easily implement random trigger position for each sample by using the following code
-                ''' TODO:
-                 new_data[perm, :, np.random.randint(
-                    0, height, size=len(perm)), np.random.randint(0, width, size=(perm))] = value
-                '''
-                x_begin = np.random.randint(0, width)
-                x_end = x_begin + size_width
-                y_begin = np.random.randint(0, height)
-                y_end = y_begin + size_height
-
-        elif shape == 'random':
-            # Something along this lines could be useful: https://www.blog.pythonlibrary.org/2021/02/23/drawing-shapes-on-images-with-python-and-pillow/
-            raise NotImplementedError('Random shape not implemented yet')
+        elif pos == 'random':
+            # Note that every sample gets the same (random) trigger position
+            # We can easily implement random trigger position for each sample by using the following code
+            ''' TODO:
+                new_data[perm, :, np.random.randint(
+                0, height, size=len(perm)), np.random.randint(0, width, size=(perm))] = value
+            '''
+            x_begin = np.random.randint(0, width)
+            x_end = x_begin + size_width
+            y_begin = np.random.randint(0, height)
+            y_end = y_begin + size_height
 
         new_data = np.array([i[0] for i in new_data])
 
