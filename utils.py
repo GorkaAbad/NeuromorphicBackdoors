@@ -8,6 +8,7 @@ import seaborn as sns
 import csv
 from spikingjelly.clock_driven import functional
 
+
 def path_name(args):
     """
     Generate the path name based on th experiment arguments. Use a function for
@@ -184,7 +185,7 @@ def train(model, train_loader, optimizer, criterion, device):
         _, predicted = output.max(1)
         total += target.size(0)
         correct += predicted.eq(torch.argmax(target, dim=1)).sum().item()
-        
+
         functional.reset_net(model)
 
     train_loss = running_loss / len(train_loader.dataset)
