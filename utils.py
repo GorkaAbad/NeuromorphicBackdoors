@@ -1,8 +1,11 @@
 import torch.nn as nn
 from torch import optim
 import torch
-import torchvision
 from tqdm import tqdm
+import matplotlib as plt
+import os
+import seaborn as sns
+import csv
 
 
 def path_name(args):
@@ -215,3 +218,115 @@ def evaluate(model, test_loader, criterion, device):
     test_acc = correct / len(test_loader.dataset)
 
     return test_loss, test_acc
+
+
+def plot_accuracy_combined(name, list_train_acc, list_test_acc, list_test_acc_backdoor):
+    '''
+    Plot the accuracy of the model in the main and backdoor test set
+    Parameters:
+        name (str): name of the figure
+        list_train_acc (list): list of train accuracy for each epoch
+        list_test_acc (list): list of test accuracy for each epoch
+        list_test_acc_backdoor (list): list of test accuracy for poisoned test dataset
+    Returns:
+        None
+    '''
+
+    sns.set()
+
+    fig, ax = plt.subplots(3, 1)
+    fig.suptitle(name)
+
+    ax[0].set_title('Training accuracy')
+    ax[0].set_xlabel('Epochs')
+    ax[0].set_ylabel('Accuracy')
+    ax[0].plot(list_train_acc)
+
+    ax[1].set_title('Test accuracy')
+    ax[1].set_xlabel('Epochs')
+    ax[1].set_ylabel('Accuracy')
+    ax[1].plot(list_test_acc)
+
+    ax[2].set_title('Test accuracy backdoor')
+    ax[2].set_xlabel('Epochs')
+    ax[2].set_ylabel('Accuracy')
+    ax[2].plot(list_test_acc_backdoor)
+
+    plt.savefig(f'{name}/accuracy.png',  bbox_inches='tight')
+    # Also saving as pdf for using the plot in the paper
+    plt.savefig(f'{name}/accuracy.pdf',  bbox_inches='tight')
+
+
+def save_experiments(args, train_acc, train_loss, test_acc_clean, test_loss_clean, test_acc_backdoor,
+                     test_loss_backdoor, model):
+    '''
+    A function that saves all the info from the experiments. It will create 2 things:
+    1. A csv file containing all the info (just text) of the experiments
+    2. A folder per experiment containing all the info regarding that experiment.
+    NOTE: We also shoud take care of the experiments running more than once.
+    The structer of the folder is:
+        - experiments
+            - experiments.csv
+            - {experiment name}
+                - args.txt
+                - data.pt
+    Parameters:
+        args (argparse.Namespace): arguments
+        train_acc (float): train accuracy
+        train_loss (float): train loss
+        test_acc_clean (float): test accuracy clean
+        test_loss_clean (float): test loss clean
+        test_acc_backdoor (float): test accuracy backdoor
+        test_loss_backdoor (float): test loss backdoor
+        model (torch.nn.Module): model
+    Returns:
+        None
+    '''
+    # Create a folder for the experiments, named 'experiments'
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
+
+    # Create if not exists a csv file, appending the new info
+    path = '{}/experiments.csv'.format(args.save_path)
+    header = ['dataname', 'model', 'epsilon', 'pos',
+              'shape', 'trigger_size', 'trigger_label',
+              'loss', 'optimizer', 'batch_size', 'epochs',
+              'train_acc', 'test_acc_clean', 'test_acc_backdoor']
+
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+
+    # Append the new info to the csv file
+    with open(path, 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow([args.dataname, args.model, args.epsilon, args.pos,
+                         args.shape, args.trigger_size, args.trigger_label,
+                         train_loss[-1], args.optimizer, args.batch_size, args.epochs,
+                         train_acc[-1], test_acc_clean[-1], test_acc_backdoor[-1]])
+
+    # Create a folder for the experiment, named after the experiment
+    path = path_name(args)
+    #path = f'experiments/{args.dataname}_{args.model}_{args.epsilon}_{args.pos}_{args.shape}_{args.trigger_size}_{args.trigger_label}'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    # Save the info in a file
+    with open(f'{path}/args.txt', 'w') as f:
+        f.write(str(args))
+
+    torch.save({
+        'args': args,
+        'list_train_loss': train_loss,
+        'list_train_acc': train_acc,
+        'list_test_loss': test_loss_clean,
+        'list_test_acc': test_acc_clean,
+        'list_test_loss_backdoor': test_loss_backdoor,
+        'list_test_acc_backdoor': test_acc_backdoor,
+        'model': model
+    }, f'{path}/data.pt')
+
+    plot_accuracy_combined(path, train_acc,
+                           test_acc_clean, test_acc_backdoor)
+    print('Model and results saved successfully!')
