@@ -74,6 +74,9 @@ def get_models(model_name='dummy', dataname='gesture', load_model=False, path=''
     elif dataname == 'cifar10':
         num_classes = 10
         n_channels = 3
+    elif dataname == 'mnist':
+        num_classes = 10
+        n_channels = 28
     else:
         raise NotImplementedError(f'{dataname} not implemented')
 

@@ -1,6 +1,5 @@
 import argparse
 import torch
-
 from models import get_models
 from utils import loss_picker, optimizer_picker, backdoor_model_trainer, save_experiments
 from poisoned_dataset import create_backdoor_data_loader
@@ -28,8 +27,8 @@ parser.add_argument('-data_dir', type=str, default='datasets',
                     help='root dir of DVS128 Gesture dataset')
 parser.add_argument('-out_dir', type=str, default='datasets',
                     help='root dir for saving logs and checkpoint')
-parser.add_argument('-dataname', default='gesture',
-                    type=str, help='dataset name', choices=['gesture', 'cifar10'])
+parser.add_argument('-dataname', default='mnist',
+                    type=str, help='dataset name', choices=['gesture', 'cifar10', 'mnist'])
 parser.add_argument('-resume', type=str,
                     help='resume from the checkpoint path')
 parser.add_argument('-amp', action='store_true',
