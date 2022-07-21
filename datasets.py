@@ -1,10 +1,11 @@
+from cgi import test
 from matplotlib.transforms import Transform
 from spikingjelly.datasets.dvs128_gesture import DVS128Gesture
 from spikingjelly.datasets.cifar10_dvs import CIFAR10DVS
 from spikingjelly.datasets.n_mnist import NMNIST
 from spikingjelly.datasets import split_to_train_test_set
-
 import os
+import torch
 
 
 def get_dataset(dataname, frames_number, data_dir):
@@ -23,7 +24,7 @@ def get_dataset(dataname, frames_number, data_dir):
     Split_by splits the event to integrate them to frames. This can be done either by setting some fixed time or the number of frames.
     We choose the number of frames following the paper: https://arxiv.org/abs/2007.05785?context=cs.LG
 
-    However the data_type
+    However the data_type 
     '''
     if dataname == 'gesture':
         transform = None
@@ -39,12 +40,21 @@ def get_dataset(dataname, frames_number, data_dir):
         # Split by number as in: https://github.com/fangwei123456/Parametric-Leaky-Integrate-and-Fire-Spiking-Neuron
         data_dir = os.path.join(data_dir, 'cifar10')
 
-        dataset = CIFAR10DVS(data_dir, data_type='frame',
-                             split_by='number', frames_number=frames_number)
+        path = os.path.join(data_dir, 'cifar_dataset.pt')
 
-        print(dataset.targets)
-        train_set, test_set = split_to_train_test_set(
-            origin_dataset=dataset, train_ratio=0.9, num_classes=10)
+        if os.path.exists(path):
+            dataset = torch.load(path)
+            train_set = dataset['train']
+            test_set = dataset['test']
+        else:
+            dataset = CIFAR10DVS(data_dir, data_type='frame',
+                                 split_by='number', frames_number=frames_number)
+
+            # TODO: Since this is slow, consider saving the dataset
+            train_set, test_set = split_to_train_test_set(
+                origin_dataset=dataset, train_ratio=0.9, num_classes=10)
+
+            torch.save({'train': train_set, 'test': test_set}, path)
 
     elif dataname == 'mnist':
 
@@ -60,4 +70,5 @@ def get_dataset(dataname, frames_number, data_dir):
                           split_by='number', frames_number=frames_number)
     else:
         raise ValueError(f'{dataname} is not supported')
+
     return train_set, test_set

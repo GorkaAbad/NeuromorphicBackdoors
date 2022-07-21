@@ -1,7 +1,7 @@
-torch
+torch==1.12.0
 matplotlib
 numpy
 seaborn
-spikingjelly
+spikingjelly==0.0.0.0.12
 tqdm
-torchvision
+torchvision==0.13.0

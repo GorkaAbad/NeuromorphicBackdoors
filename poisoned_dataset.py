@@ -34,8 +34,20 @@ class PoisonedDataset(Dataset):
 
     '''
 
-    def __init__(self, dataset, trigger_label=0, mode='train', epsilon=0.1, pos='top-left', type=0, time_step=16,
+    def __init__(self, dataset, trigger_label=0, mode='train', epsilon=0.1, pos='top-left', trigger_type=0, time_step=16,
                  trigger_size=0.1, device=torch.device('cuda'), dataname='minst'):
+
+        # Handle special case for CIGFAR10
+        if type(dataset) == torch.utils.data.Subset:
+            import pdb
+            pdb.set_trace()
+            targets = torch.Tensor(dataset.dataset.targets)[dataset.indices]
+            data = np.array([i[0] for i in dataset.dataset])
+            data = torch.Tensor(data)[dataset.indices]
+            dataset = dataset.dataset
+        else:
+            targets = dataset.targets
+            data = dataset
 
         self.class_num = len(dataset.classes)
         self.classes = dataset.classes
@@ -47,9 +59,10 @@ class PoisonedDataset(Dataset):
         self.ori_dataset = dataset
         self.transform = dataset.transform
 
+        print('ondo')
         # TODO: Change the attributes of the imagenet to fit the same as MNIST
         self.data, self.targets = self.add_trigger(
-            dataset, dataset.targets, trigger_label, epsilon, mode, pos, type, trigger_size)
+            data, targets, trigger_label, epsilon, mode, pos, trigger_type, trigger_size)
         self.channels, self.width, self.height = self.__shape_info__()
 
     def __getitem__(self, item):
@@ -208,15 +221,15 @@ def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, tri
 
     train_data = PoisonedDataset(
         train_data, trigger_label, mode='train', epsilon=epsilon, device=device,
-        pos=pos, type=type, time_step=T, trigger_size=trigger_size, dataname=dataname)
+        pos=pos, trigger_type=type, time_step=T, trigger_size=trigger_size, dataname=dataname)
 
     test_data_ori = PoisonedDataset(test_data, trigger_label, mode='test', epsilon=0,
-                                    device=device, pos=pos, type=type, time_step=T,
+                                    device=device, pos=pos, trigger_type=type, time_step=T,
                                     trigger_size=trigger_size, dataname=dataname)
 
     # TODO: Check if the backdoor is also injected in the same label as the original test data
     test_data_tri = PoisonedDataset(test_data, trigger_label, mode='test', epsilon=1,
-                                    device=device, pos=pos, type=type, time_step=T,
+                                    device=device, pos=pos, trigger_type=type, time_step=T,
                                     trigger_size=trigger_size, dataname=dataname)
 
     frame, label = test_data_tri[0]
