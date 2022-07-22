@@ -3,6 +3,7 @@ import torch
 from models import get_model
 from utils import loss_picker, optimizer_picker, backdoor_model_trainer, save_experiments
 from poisoned_dataset import create_backdoor_data_loader
+from torch.cuda import amp
 
 parser = argparse.ArgumentParser(description='Classify DVS128 Gesture')
 parser.add_argument('-T', default=16, type=int,
@@ -91,6 +92,10 @@ def main():
     poison_trainloader, clean_testloader, poison_testloader = create_backdoor_data_loader(
         args.dataname, args.trigger, args.epsilon, args.pos, args.type, args.trigger_size,
         args.b, args.b_test, args.T, device, args.data_dir)
+
+    scaler = None
+    if args.amp:
+        scaler = amp.GradScaler()
 
     # Train the model
     list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(

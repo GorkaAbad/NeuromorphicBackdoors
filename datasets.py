@@ -89,9 +89,14 @@ def get_dataset(dataname, frames_number, data_dir):
     else:
         raise ValueError(f'{dataname} is not supported')
 
-    train_set.samples = train_set.samples[:1000]
-    train_set.targets = train_set.targets[:1000]
+    if type(train_set) == torch.utils.data.Subset:
+        train_set.indices = train_set.indices[:1000]
+        test_set.indices = test_set.indices[:1000]
+    else:
+        train_set.samples = train_set.samples[:1000]
+        train_set.targets = train_set.targets[:1000]
 
-    test_set.samples = test_set.samples[:200]
-    test_set.targets = test_set.targets[:200]
+        test_set.samples = test_set.samples[:200]
+        test_set.targets = test_set.targets[:200]
+
     return train_set, test_set
