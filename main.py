@@ -1,17 +1,18 @@
 import argparse
 import torch
-from models import get_models
+from models import get_model
 from utils import loss_picker, optimizer_picker, backdoor_model_trainer, save_experiments
 from poisoned_dataset import create_backdoor_data_loader
 
 parser = argparse.ArgumentParser(description='Classify DVS128 Gesture')
 parser.add_argument('-T', default=16, type=int,
                     help='simulating time-steps')
-parser.add_argument('-model', default='dummy', type=str, help='model name')
+parser.add_argument('-model', default='dummy', type=str,
+                    help='Model name', choices=['dummy'])
 parser.add_argument('-trigger', default=0, type=int,
                     help='The index of the trigger label')
 parser.add_argument('-polarity', default=0, type=int,
-                    help='The polarity of the trigger')
+                    help='The polarity of the trigger', choices=[0, 1, 2])
 parser.add_argument('-trigger_size', default=0.1,
                     type=float, help='The size of the trigger as the percentage of the image size')
 parser.add_argument('-b', default=64, type=int, help='batch size')
@@ -35,8 +36,8 @@ parser.add_argument('-amp', action='store_true',
                     help='automatic mixed precision training')
 parser.add_argument('-cupy', action='store_true',
                     help='use CUDA neuron and multi-step forward mode')
-parser.add_argument('-opt', type=str, default='SGD',
-                    help='use which optimizer. SDG or Adam')
+parser.add_argument('-opt', type=str, default='sgd',
+                    help='use which optimizer. sgd or adam')
 parser.add_argument('-lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('-loss', type=str, default='mse', help='loss function')
 parser.add_argument('-momentum', default=0.9,
@@ -59,6 +60,14 @@ parser.add_argument('-load_model', action='store_true',
                     help='load model from checkpoint')
 parser.add_argument('-trigger_label', default=0, type=int,
                     help='The index of the trigger label')
+parser.add_argument('-tau', default=2.0, type=float,
+                    help='Tau for the LIF node')
+parser.add_argument('-use_plif', action='store_true',
+                    default=False, help='Use PLIF')
+parser.add_argument('-use_max_pool', action='store_true',
+                    default=False, help='Use MaxPool')
+parser.add_argument('-detach_reset', action='store_true',
+                    default=False, help='Detach reset')
 
 args = parser.parse_args()
 
@@ -70,9 +79,8 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # Get the model, loss and optimizer
-    model = get_models(args.model,
-                       dataname=args.dataname, load_model=False,
-                       path=args.data_dir)
+    model = get_model(args.dataname, args.T, args.tau, args.use_plif,
+                      args.use_max_pool, args.detach_reset)
     model.to(device)
 
     criterion = loss_picker(args.loss)

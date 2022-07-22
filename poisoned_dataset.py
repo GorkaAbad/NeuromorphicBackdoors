@@ -180,8 +180,10 @@ class PoisonedDataset(Dataset):
 
         # Static trigger
         if type == 0:
+            # TODO: Take into account the polarity. Being 0 green, 1 ligth blue and 2 a mix of both ie dark blue
+            # Check this im not sure
             new_data[perm, :, 0, y_begin:y_end, x_begin:x_end] = 1
-            new_data[perm, :, 1, y_begin:y_end, x_begin:x_end] = 1
+            new_data[perm, :, 1, y_begin:y_end, x_begin:x_end] = 0
 
         else:
             # Dynamic trigger
