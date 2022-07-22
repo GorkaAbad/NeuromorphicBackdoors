@@ -28,7 +28,7 @@ parser.add_argument('-data_dir', type=str, default='datasets',
                     help='root dir of DVS128 Gesture dataset')
 parser.add_argument('-out_dir', type=str, default='datasets',
                     help='root dir for saving logs and checkpoint')
-parser.add_argument('-dataname', default='mnist',
+parser.add_argument('-dataname', default='cifar10',
                     type=str, help='dataset name', choices=['gesture', 'cifar10', 'mnist'])
 parser.add_argument('-resume', type=str,
                     help='resume from the checkpoint path')

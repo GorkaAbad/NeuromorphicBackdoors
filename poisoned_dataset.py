@@ -37,10 +37,8 @@ class PoisonedDataset(Dataset):
     def __init__(self, dataset, trigger_label=0, mode='train', epsilon=0.1, pos='top-left', trigger_type=0, time_step=16,
                  trigger_size=0.1, device=torch.device('cuda'), dataname='minst'):
 
-        # Handle special case for CIGFAR10
+        # Handle special case for CIFAR10
         if type(dataset) == torch.utils.data.Subset:
-            import pdb
-            pdb.set_trace()
             targets = torch.Tensor(dataset.dataset.targets)[dataset.indices]
             data = np.array([i[0] for i in dataset.dataset])
             data = torch.Tensor(data)[dataset.indices]
@@ -59,7 +57,6 @@ class PoisonedDataset(Dataset):
         self.ori_dataset = dataset
         self.transform = dataset.transform
 
-        print('ondo')
         # TODO: Change the attributes of the imagenet to fit the same as MNIST
         self.data, self.targets = self.add_trigger(
             data, targets, trigger_label, epsilon, mode, pos, trigger_type, trigger_size)

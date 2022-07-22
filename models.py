@@ -117,7 +117,7 @@ class NMNISTNet(NeuromorphicNet):
 
 
 class CIFAR10DVSNet(NeuromorphicNet):
-    def __init__(self, T, init_tau, use_plif, use_max_pool, channels, number_layer, detach_reset):
+    def __init__(self, T, init_tau, use_plif, use_max_pool, detach_reset, channels, number_layer):
         super().__init__(T=T, init_tau=init_tau, use_plif=use_plif, use_max_pool=use_max_pool,
                          detach_reset=detach_reset)
         w = 128
