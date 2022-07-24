@@ -228,6 +228,13 @@ def create_dynamic_trigger(size_x, size_y, new_data, height, width, perm, pos, t
         width_list = [start_x, start_x +
                       size_x + 2, start_x + size_x * 2 + 2]
         height_list = [start_y, start_y, start_y]
+    elif pos == 'random':
+        start_x = np.random.randint(0, width)
+        start_y = np.random.randint(0, height)
+
+        width_list = [start_x, start_x +
+                      size_x + 2, start_x + size_x * 2 + 2]
+        height_list = [start_y, start_y, start_y]
 
     j = 0
     t = 0
