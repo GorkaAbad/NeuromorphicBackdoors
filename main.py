@@ -1,4 +1,5 @@
 import argparse
+from numpy import double
 import torch
 from models import get_model
 from utils import loss_picker, optimizer_picker, backdoor_model_trainer, save_experiments
@@ -45,7 +46,7 @@ parser.add_argument('-step_size', default=32,
                     type=float, help='step_size for StepLR')
 parser.add_argument('-T_max', default=32, type=int,
                     help='T_max for CosineAnnealingLR')
-parser.add_argument('-epsilon', default=0.1, type=float,
+parser.add_argument('-epsilon', default=0.1, type=double,
                     help='Percentage of poisoned data')
 parser.add_argument('-target', default=0, type=int,
                     help='Index for the target label')

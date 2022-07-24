@@ -34,7 +34,7 @@ class PoisonedDataset(Dataset):
 
         # TODO: Change the attributes of the imagenet to fit the same as MNIST
         self.data, self.targets = self.add_trigger(
-            data, targets, trigger_label, epsilon, mode, pos, trigger_type, trigger_size)
+            data, targets, trigger_label, epsilon, mode, pos, trigger_type, trigger_size, polarity)
         self.channels, self.width, self.height = self.__shape_info__()
 
     def __getitem__(self, item):
