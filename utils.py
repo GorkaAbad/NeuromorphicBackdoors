@@ -1,3 +1,4 @@
+from matplotlib.pyplot import sca
 import torch.nn as nn
 from torch import optim
 import torch
@@ -7,6 +8,7 @@ import os
 import seaborn as sns
 import csv
 from spikingjelly.clock_driven import functional
+from torch.cuda import amp
 
 
 def path_name(args):
@@ -73,7 +75,7 @@ def optimizer_picker(optimization, param, lr, momentum, T_max):
 
 
 def backdoor_model_trainer(model, criterion, optimizer, epochs, poison_trainloader, clean_testloader,
-                           poison_testloader, device, args):
+                           poison_testloader, device, args, scaler=None):
     '''
     Train the model on the backdoored dataset and evaluate the model on the clean and poisoned test dataset
     Parameters:
@@ -112,7 +114,7 @@ def backdoor_model_trainer(model, criterion, optimizer, epochs, poison_trainload
 
         for epoch in range(epochs):
             train_loss, train_acc = train(
-                model, poison_trainloader, optimizer, criterion, device)
+                model, poison_trainloader, optimizer, criterion, device, scaler)
 
             test_loss_clean, test_acc_clean = evaluate(
                 model, clean_testloader, criterion, device)
@@ -146,7 +148,7 @@ def backdoor_model_trainer(model, criterion, optimizer, epochs, poison_trainload
     return list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor
 
 
-def train(model, train_loader, optimizer, criterion, device):
+def train(model, train_loader, optimizer, criterion, device, scaler=None):
     '''
     Train the model for a single epoch
     Parameters:
@@ -168,17 +170,31 @@ def train(model, train_loader, optimizer, criterion, device):
     for (data, target) in tqdm(train_loader):
         data, target = data.float().to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data)
-        # softmax = nn.Softmax(dim=-1)
-        # output = softmax(output)
 
-        if isinstance(criterion, torch.nn.MSELoss):
-            loss = criterion(output, target)
-        elif isinstance(criterion, torch.nn.CrossEntropyLoss):
-            loss = criterion(output, torch.argmax(target, dim=1))
+        if scaler is not None:
+            with amp.autocast():
+                output = model(data)
+                if isinstance(criterion, torch.nn.MSELoss):
+                    loss = criterion(output, target)
+                elif isinstance(criterion, torch.nn.CrossEntropyLoss):
+                    loss = criterion(output, torch.argmax(target, dim=1))
 
-        loss.backward()
-        optimizer.step()
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+
+        else:
+            output = model(data)
+            # softmax = nn.Softmax(dim=-1)
+            # output = softmax(output)
+
+            if isinstance(criterion, torch.nn.MSELoss):
+                loss = criterion(output, target)
+            elif isinstance(criterion, torch.nn.CrossEntropyLoss):
+                loss = criterion(output, torch.argmax(target, dim=1))
+
+            loss.backward()
+            optimizer.step()
 
         running_loss += loss.item()
 
@@ -292,7 +308,7 @@ def save_experiments(args, train_acc, train_loss, test_acc_clean, test_loss_clea
     # Create if not exists a csv file, appending the new info
     path = '{}/experiments.csv'.format(args.save_path)
     header = ['dataname', 'model', 'epsilon', 'pos',
-              'shape', 'trigger_size', 'trigger_label',
+              'polarity', 'trigger_size', 'trigger_label',
               'loss', 'optimizer', 'batch_size', 'epochs',
               'train_acc', 'test_acc_clean', 'test_acc_backdoor']
 
@@ -305,7 +321,7 @@ def save_experiments(args, train_acc, train_loss, test_acc_clean, test_loss_clea
     with open(path, 'a') as f:
         writer = csv.writer(f)
         writer.writerow([args.dataname, args.model, args.epsilon, args.pos,
-                         args.shape, args.trigger_size, args.trigger_label,
+                         args.polarity, args.trigger_size, args.trigger_label,
                          train_loss[-1], args.optimizer, args.batch_size, args.epochs,
                          train_acc[-1], test_acc_clean[-1], test_acc_backdoor[-1]])
 
@@ -332,4 +348,4 @@ def save_experiments(args, train_acc, train_loss, test_acc_clean, test_loss_clea
 
     plot_accuracy_combined(path, train_acc,
                            test_acc_clean, test_acc_backdoor)
-    print('Model and results saved successfully!')
+    print('[!] Model and results saved successfully!')

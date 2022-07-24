@@ -35,8 +35,6 @@ parser.add_argument('-resume', type=str,
                     help='resume from the checkpoint path')
 parser.add_argument('-amp', action='store_true',
                     help='automatic mixed precision training')
-parser.add_argument('-cupy', action='store_true',
-                    help='use CUDA neuron and multi-step forward mode')
 parser.add_argument('-opt', type=str, default='sgd',
                     help='use which optimizer. sgd or adam')
 parser.add_argument('-lr', default=0.001, type=float, help='learning rate')
@@ -75,13 +73,13 @@ args = parser.parse_args()
 
 def main():
     torch.manual_seed(args.seed)
-    # path = path_name(args)
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # Get the model, loss and optimizer
     model = get_model(args.dataname, args.T, args.tau, args.use_plif,
                       args.use_max_pool, args.detach_reset)
+
     model.to(device)
 
     criterion = loss_picker(args.loss)
@@ -91,7 +89,7 @@ def main():
 
     poison_trainloader, clean_testloader, poison_testloader = create_backdoor_data_loader(
         args.dataname, args.trigger, args.epsilon, args.pos, args.type, args.trigger_size,
-        args.b, args.b_test, args.T, device, args.data_dir)
+        args.b, args.b_test, args.T, device, args.data_dir, args.polarity)
 
     scaler = None
     if args.amp:
@@ -100,7 +98,7 @@ def main():
     # Train the model
     list_train_loss, list_train_acc, list_test_loss, list_test_acc, list_test_loss_backdoor, list_test_acc_backdoor = backdoor_model_trainer(
         model, criterion, optimizer, args.epochs, poison_trainloader, clean_testloader, poison_testloader,
-        device, args)
+        device, args, scaler)
 
     # Save the results
     save_experiments(args, list_train_acc, list_train_loss, list_test_acc, list_test_loss, list_test_acc_backdoor,

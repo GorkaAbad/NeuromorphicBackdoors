@@ -8,34 +8,9 @@ from spikingjelly.datasets import play_frame
 
 
 class PoisonedDataset(Dataset):
-    '''
-    Poisoned dataset class
-
-    Attributes:
-        dataset (torch.utils.data.Dataset): dataset
-        trigger_label (int): label of the target/objective class. The class to be changed to.
-        mode (str): 'train' or 'test'
-        epsilon (float): rate of poisoned data
-        pos (str): position of the trigger. 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle', 'random'
-        shape (str): shape of the trigger. 'square' or 'random'
-        color (str): color of the trigger. 'white' or 'random'
-        trigger_size (float): size of the trigger as the percentage of the image size.
-        device (torch.device): device
-        dataname (str): name of the dataset
-        transform (torchvision.transforms): transform
-
-    Methods:
-        __getitem__: returns the poisoned data and the corresponding label
-        __len__: returns the length of the dataset
-        __shape_info__: returns the shape of the dataset
-        reshape: reshapes the dataset
-        norm: normalizes the dataset
-        add_trigger: adds the trigger to the dataset
-
-    '''
 
     def __init__(self, dataset, trigger_label=0, mode='train', epsilon=0.1, pos='top-left', trigger_type=0, time_step=16,
-                 trigger_size=0.1, device=torch.device('cuda'), dataname='minst'):
+                 trigger_size=0.1, device=torch.device('cuda'), dataname='minst', polarity=0):
 
         # Handle special case for CIFAR10
         if type(dataset) == torch.utils.data.Subset:
@@ -90,25 +65,9 @@ class PoisonedDataset(Dataset):
         scale = np.std(data, 0).clip(min=1)
         return (data - offset) / scale
 
-    def add_trigger(self, data, targets, trigger_label, epsilon, mode, pos, type, trigger_size):
-        '''
-        Adds the trigger to the dataset
+    def add_trigger(self, data, targets, trigger_label, epsilon, mode, pos, type, trigger_size, polarity):
 
-        Parameters:
-            data (torch.tensor): dataset
-            targets (torch.tensor): targets
-            trigger_label (int): label of the target/objective class. The class to be changed to.
-            epsilon (float): rate of poisoned data
-            mode (str): 'train' or 'test'
-            pos (str): position of the trigger. 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle', 'random'
-            trigger_size (float): size of the trigger as the percentage of the image size.
-
-        Returns:
-            poisoned_data (torch.tensor): poisoned dataset
-
-        '''
-
-        print("## generate " + mode + " Bad Imgs")
+        print("[!] Generating " + mode + " Bad Imgs")
         new_data = copy.deepcopy(data)
         new_targets = copy.deepcopy(targets)
 
@@ -179,8 +138,16 @@ class PoisonedDataset(Dataset):
         if type == 0:
             # TODO: Take into account the polarity. Being 0 green, 1 ligth blue and 2 a mix of both ie dark blue
             # Check this im not sure
-            new_data[perm, :, 0, y_begin:y_end, x_begin:x_end] = 1
-            new_data[perm, :, 1, y_begin:y_end, x_begin:x_end] = 0
+
+            if polarity == 0:
+                new_data[perm, :, 0, y_begin:y_end, x_begin:x_end] = 1
+                new_data[perm, :, 1, y_begin:y_end, x_begin:x_end] = 0
+            elif polarity == 1:
+                new_data[perm, :, 0, y_begin:y_end, x_begin:x_end] = 0
+                new_data[perm, :, 1, y_begin:y_end, x_begin:x_end] = 1
+            else:
+                new_data[perm, :, 0, y_begin:y_end, x_begin:x_end] = 1
+                new_data[perm, :, 1, y_begin:y_end, x_begin:x_end] = 1
 
         else:
             # Dynamic trigger
@@ -193,43 +160,23 @@ class PoisonedDataset(Dataset):
 
 
 def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, trigger_size,
-                                batch_size_train, batch_size_test, T, device, data_dir):
-    '''
-    Creates the data loader for the backdoor training dataset, a clean test dataset, and a fully poisoned test dataset.
-
-    Parameters:
-        dataname (str): name of the dataset
-        trigger_label (int): label of the target/objective class. The class to be changed to.
-        epsilon (float): rate of poisoned data
-        pos (str): position of the trigger. 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle', 'random'
-        shape (str): shape of the trigger. 'square' or 'random'
-        trigger_size (float): size of the trigger as the percentage of the image size.
-        batch_size_train (int): batch size for training
-        batch_size_test (int): batch size for testing
-        device (torch.device): device to use
-
-    Returns:
-        train_loader (torch.utils.data.DataLoader): training data loader
-        test_loader (torch.utils.data.DataLoader): test data loader
-        poisoned_test_loader (torch.utils.data.DataLoader): poisoned test data loader
-
-    '''
+                                batch_size_train, batch_size_test, T, device, data_dir, polarity):
 
     # Get the dataset
     train_data, test_data = get_dataset(dataname, T, data_dir)
 
     train_data = PoisonedDataset(
         train_data, trigger_label, mode='train', epsilon=epsilon, device=device,
-        pos=pos, trigger_type=type, time_step=T, trigger_size=trigger_size, dataname=dataname)
+        pos=pos, trigger_type=type, time_step=T, trigger_size=trigger_size, dataname=dataname, polarity=polarity)
 
     test_data_ori = PoisonedDataset(test_data, trigger_label, mode='test', epsilon=0,
                                     device=device, pos=pos, trigger_type=type, time_step=T,
-                                    trigger_size=trigger_size, dataname=dataname)
+                                    trigger_size=trigger_size, dataname=dataname, polarity=polarity)
 
     # TODO: Check if the backdoor is also injected in the same label as the original test data
     test_data_tri = PoisonedDataset(test_data, trigger_label, mode='test', epsilon=1,
                                     device=device, pos=pos, trigger_type=type, time_step=T,
-                                    trigger_size=trigger_size, dataname=dataname)
+                                    trigger_size=trigger_size, dataname=dataname, polarity=polarity)
 
     frame, label = test_data_tri[0]
     play_frame(frame, 'backdoor.gif')
@@ -245,24 +192,6 @@ def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, tri
 
 
 def create_dynamic_trigger(size_x, size_y, new_data, height, width, perm, pos, time_step):
-    '''
-    Creates the dynamic trigger for the backdoor dataset.
-
-    Parameters:
-        size_x (int): width of the trigger
-        size_y (int): height of the trigger
-        new_data (np.array): data to inject the trigger
-        height (int): height of the image
-        width (int): width of the image
-        perm (list): indices of the samples to inject the trigger
-        pos (str): position of the trigger. 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle', 'random'
-        shape (str): shape of the trigger. 'square' or 'random'
-        time_step (int): time step of the trigger
-        device (torch.device): device to use
-
-    Returns:
-        new_data (np.array): data with the injected trigger
-    '''
 
     if pos == 'top-left':
         start_x = size_x + 2

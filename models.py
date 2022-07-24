@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from spikingjelly.clock_driven import layer, surrogate
-from spikingjelly.clock_driven.neuron import BaseNode, LIFNode, ParametricLIFNode
-import math
+from spikingjelly.clock_driven.neuron import LIFNode, ParametricLIFNode
 
 
 def get_model(dataname='gesture', T=16, init_tau=0.02, use_plif=False, use_max_pool=False, detach_reset=False):
