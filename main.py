@@ -68,6 +68,8 @@ parser.add_argument('-use_max_pool', action='store_true',
                     default=False, help='Use MaxPool')
 parser.add_argument('-detach_reset', action='store_true',
                     default=False, help='Detach reset')
+parser.add_argument('-save_path', type=str, default='.',
+                    help='Path to save the model')
 
 args = parser.parse_args()
 
