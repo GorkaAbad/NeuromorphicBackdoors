@@ -2,6 +2,7 @@ import copy
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm
 from datasets import get_dataset
 from PIL import Image
 from spikingjelly.datasets import play_frame
@@ -132,7 +133,12 @@ class PoisonedDataset(Dataset):
             y_begin = np.random.randint(0, height)
             y_end = y_begin + size_height
 
-        new_data = np.array([i[0] for i in new_data])
+        # new_data = np.array([i[0] for i in new_data])
+        list = []
+        for data in tqdm(new_data):
+            list.append(np.array(data[0]))
+
+        new_data = np.array(list)
 
         # Static trigger
         if type == 0:
