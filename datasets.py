@@ -1,6 +1,5 @@
 from cgi import test
 from doctest import ELLIPSIS_MARKER
-from matplotlib.transforms import Transform
 from spikingjelly.datasets.dvs128_gesture import DVS128Gesture
 from spikingjelly.datasets.cifar10_dvs import CIFAR10DVS
 from spikingjelly.datasets.n_mnist import NMNIST
@@ -27,77 +26,36 @@ def get_dataset(dataname, frames_number, data_dir):
 
     However the data_type 
     '''
+
+    data_dir = os.path.join(data_dir, dataname)
+
     if dataname == 'gesture':
         transform = None
 
-        data_dir = os.path.join(data_dir, 'gesture')
-        path = os.path.join(data_dir, 'gesture_dataset.pt')
-
-        if os.path.exists(path):
-            dataset = torch.load(path)
-            train_set = dataset['train']
-            test_set = dataset['test']
-        else:
-
-            train_set = DVS128Gesture(
-                data_dir, train=True, data_type='frame', split_by='number', frames_number=frames_number, transform=transform)
-            test_set = DVS128Gesture(data_dir, train=False,
-                                     data_type='frame', split_by='number', frames_number=frames_number, transform=transform)
-
-            torch.save({'train': train_set, 'test': test_set}, path)
+        train_set = DVS128Gesture(
+            data_dir, train=True, data_type='frame', split_by='number', frames_number=frames_number, transform=transform)
+        test_set = DVS128Gesture(data_dir, train=False,
+                                 data_type='frame', split_by='number', frames_number=frames_number, transform=transform)
 
     elif dataname == 'cifar10':
 
         # Split by number as in: https://github.com/fangwei123456/Parametric-Leaky-Integrate-and-Fire-Spiking-Neuron
-        data_dir = os.path.join(data_dir, 'cifar10')
 
-        path = os.path.join(data_dir, 'cifar_dataset.pt')
+        dataset = CIFAR10DVS(data_dir, data_type='frame',
+                             split_by='number', frames_number=frames_number)
 
-        if os.path.exists(path):
-            dataset = torch.load(path)
-            train_set = dataset['train']
-            test_set = dataset['test']
-        else:
-            dataset = CIFAR10DVS(data_dir, data_type='frame',
-                                 split_by='number', frames_number=frames_number)
-
-            # TODO: Since this is slow, consider saving the dataset
-            train_set, test_set = split_to_train_test_set(
-                origin_dataset=dataset, train_ratio=0.9, num_classes=10)
-
-            torch.save({'train': train_set, 'test': test_set}, path)
+        # TODO: Since this is slow, consider saving the dataset
+        train_set, test_set = split_to_train_test_set(
+            origin_dataset=dataset, train_ratio=0.9, num_classes=10)
 
     elif dataname == 'mnist':
 
-        data_dir = os.path.join(data_dir, 'mnist')
+        train_set = NMNIST(data_dir, train=True, data_type='frame',
+                           split_by='number', frames_number=frames_number)
 
-        path = os.path.join(data_dir, 'mnist_dataset.pt')
-
-        if os.path.exists(path):
-            dataset = torch.load(path)
-            train_set = dataset['train']
-            test_set = dataset['test']
-
-        else:
-
-            train_set = NMNIST(data_dir, train=True, data_type='frame',
-                               split_by='number', frames_number=frames_number)
-
-            test_set = NMNIST(data_dir, train=False, data_type='frame',
-                              split_by='number', frames_number=frames_number)
-            torch.save({'train': train_set, 'test': test_set}, path)
+        test_set = NMNIST(data_dir, train=False, data_type='frame',
+                          split_by='number', frames_number=frames_number)
     else:
         raise ValueError(f'{dataname} is not supported')
-
-    # if type(train_set) == torch.utils.data.Subset:
-    #     train_set.indices = train_set.indices[:1000]
-    #     test_set.indices = test_set.indices[:1000]
-
-    # else:
-    #     train_set.samples = train_set.samples[:1000]
-    #     train_set.targets = train_set.targets[:1000]
-
-    #     test_set.samples = test_set.samples[:200]
-    #     test_set.targets = test_set.targets[:200]
 
     return train_set, test_set
