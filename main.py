@@ -48,8 +48,6 @@ parser.add_argument('-T_max', default=32, type=int,
                     help='T_max for CosineAnnealingLR')
 parser.add_argument('-epsilon', default=0.1, type=double,
                     help='Percentage of poisoned data')
-parser.add_argument('-target', default=0, type=int,
-                    help='Index for the target label')
 parser.add_argument('-pos', default='top-left', type=str,
                     help='Position of the triggger')
 parser.add_argument('-type', default=1, type=int,
@@ -91,7 +89,7 @@ def main():
         args.opt, model.parameters(), args.lr, args.momentum, args.T_max)
 
     poison_trainloader, clean_testloader, poison_testloader = create_backdoor_data_loader(
-        args.dataname, args.trigger, args.epsilon, args.pos, args.type, args.trigger_size,
+        args.dataname, args.trigger_label, args.epsilon, args.pos, args.type, args.trigger_size,
         args.b, args.b_test, args.T, device, args.data_dir, args.polarity)
 
     scaler = None
