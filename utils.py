@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch import optim
 import torch
 from tqdm import tqdm
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import os
 import seaborn as sns
 import csv
