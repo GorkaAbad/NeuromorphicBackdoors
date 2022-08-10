@@ -322,7 +322,7 @@ def save_experiments(args, train_acc, train_loss, test_acc_clean, test_loss_clea
         writer = csv.writer(f)
         writer.writerow([args.dataname, args.model, args.epsilon, args.pos,
                          args.polarity, args.trigger_size, args.trigger_label,
-                         train_loss[-1], args.opt, args.batch_size, args.epochs,
+                         train_loss[-1], args.opt, args.b, args.epochs,
                          train_acc[-1], test_acc_clean[-1], test_acc_backdoor[-1]])
 
     # Create a folder for the experiment, named after the experiment
