@@ -23,7 +23,7 @@ def path_name(args):
         path (string): The path used to save our experiments
     """
     path = f'{args.dataname}_{args.model}_{args.epsilon}_{args.pos}_{args.trigger_size}_{args.trigger_label}'
-    path = os.path.join(args.save_dir, path)
+    path = os.path.join(args.save_path, path)
     return path
 
 
