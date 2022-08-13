@@ -1,7 +1,7 @@
 import argparse
 from numpy import double
 import torch
-from models_old import get_models
+from models import get_model
 from utils import loss_picker, optimizer_picker, backdoor_model_trainer, save_experiments
 from poisoned_dataset import create_backdoor_data_loader
 from torch.cuda import amp
@@ -78,9 +78,8 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # Get the model, loss and optimizer
-    # model = get_model(args.dataname, args.T, args.tau, args.use_plif,
-    #                   args.use_max_pool, args.detach_reset)
-    model = get_models()
+    model = get_model(args.dataname, args.T, args.tau, args.use_plif,
+                      args.use_max_pool, args.detach_reset)
 
     model.to(device)
 

@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from spikingjelly.clock_driven import layer, surrogate
 from spikingjelly.clock_driven.neuron import LIFNode, ParametricLIFNode
+from models_old import get_models
 
 
 def get_model(dataname='gesture', T=16, init_tau=0.02, use_plif=False, use_max_pool=False, detach_reset=False):
@@ -28,11 +29,13 @@ def get_model(dataname='gesture', T=16, init_tau=0.02, use_plif=False, use_max_p
         model = NMNISTNet(T, init_tau, use_plif, use_max_pool,
                           detach_reset, 34, 2)
     elif dataname == 'gesture':
-        model = DVS128GestureNet(T, init_tau, use_plif, use_max_pool,
-                                 detach_reset, 128, 5)
+        # model = DVS128GestureNet(T, init_tau, use_plif, use_max_pool,
+        #                          detach_reset, 128, 5)
+        model = get_models()
     elif dataname == 'cifar10':
-        model = CIFAR10DVSNet(T, init_tau, use_plif, use_max_pool,
-                              detach_reset, 128, 4)
+        # model = CIFAR10DVSNet(T, init_tau, use_plif, use_max_pool,
+        #                       detach_reset, 128, 4)
+        model = get_models()
     else:
         raise ValueError('Dataset {} is not supported'.format(dataname))
 

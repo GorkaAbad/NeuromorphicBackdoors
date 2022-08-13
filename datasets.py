@@ -44,7 +44,7 @@ def get_dataset(dataname, frames_number, data_dir):
         dataset = CIFAR10DVS(data_dir, data_type='frame',
                              split_by='number', frames_number=frames_number)
 
-        cifar = os.join.path(data_dir, 'cifar10.pt')
+        cifar = os.path.join(data_dir, 'cifar10.pt')
         if not os.path.exists(cifar):
             # TODO: Since this is slow, consider saving the dataset
             train_set, test_set = split_to_train_test_set(

@@ -6,18 +6,49 @@ from tqdm import tqdm
 from datasets import get_dataset
 from PIL import Image
 from spikingjelly.datasets import play_frame
+import os
 
 
 class PoisonedDataset(Dataset):
 
     def __init__(self, dataset, trigger_label=0, mode='train', epsilon=0.1, pos='top-left', trigger_type=0, time_step=16,
-                 trigger_size=0.1, device=torch.device('cuda'), dataname='minst', polarity=0):
+                 trigger_size=0.1, device=torch.device('cuda'), dataname='minst', polarity=0, data_dir='./data/'):
 
         # Handle special case for CIFAR10
         if type(dataset) == torch.utils.data.Subset:
-            targets = torch.Tensor(dataset.dataset.targets)[dataset.indices]
-            data = np.array([i[0] for i in dataset.dataset])
-            data = torch.Tensor(data)[dataset.indices]
+            path = os.path.join(data_dir, dataname, 'cifar10split.pt')
+
+            if not os.path.exists(path):
+                print("Targets")
+                path_target = os.path.join(data_dir, dataname, 'targets.pt')
+                if not os.path.exists(path_target):
+                    targets = torch.Tensor(dataset.dataset.targets)[
+                        dataset.indices]
+                    torch.save(targets, path_target)
+                else:
+                    targets = torch.load(path_target)
+
+                print("Data")
+                path_data = os.path.join(data_dir, dataname, 'data_1.pt')
+                if not os.path.exists(path_data):
+                    data = np.array([i[0] for i in dataset.dataset])
+                    torch.save(data, path_data)
+                else:
+                    data = torch.load(path_data)
+                
+                path_data = os.path.join(data_dir, dataname, 'data_2.pt')
+                if not os.path.exists(path_data):
+                    data = torch.Tensor(data)[dataset.indices]
+                    torch.save(data, path_data)
+                else:
+                    data = torch.load(path_data)
+
+                torch.save({'data': data, 'targets': targets}, path)
+
+            else:
+                data = torch.load(path)['data']
+                targets = torch.load(path)['targets']
+
             dataset = dataset.dataset
         else:
             targets = dataset.targets
@@ -173,7 +204,7 @@ def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, tri
 
     train_data = PoisonedDataset(
         train_data, trigger_label, mode='train', epsilon=epsilon, device=device,
-        pos=pos, trigger_type=type, time_step=T, trigger_size=trigger_size, dataname=dataname, polarity=polarity)
+        pos=pos, trigger_type=type, time_step=T, trigger_size=trigger_size, dataname=dataname, polarity=polarity, data_dir=data_dir)
 
     test_data_ori = PoisonedDataset(test_data, trigger_label, mode='test', epsilon=0,
                                     device=device, pos=pos, trigger_type=type, time_step=T,
