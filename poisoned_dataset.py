@@ -35,7 +35,7 @@ class PoisonedDataset(Dataset):
                     torch.save(data, path_data)
                 else:
                     data = torch.load(path_data)
-                
+
                 path_data = os.path.join(data_dir, dataname, 'data_2.pt')
                 if not os.path.exists(path_data):
                     data = torch.Tensor(data)[dataset.indices]
@@ -228,7 +228,7 @@ def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, tri
     return train_data_loader, test_data_ori_loader, test_data_tri_loader
 
 
-def create_dynamic_trigger(size_x, size_y, new_data, height, width, perm, pos, time_step):
+def create_dynamic_trigger(size_x, size_y, new_data, height, width, perm, pos, time_step, polarity):
 
     if pos == 'top-left':
         start_x = size_x + 2
@@ -283,9 +283,18 @@ def create_dynamic_trigger(size_x, size_y, new_data, height, width, perm, pos, t
         for x in range(size_x):
             for y in range(size_y):
 
-                new_data[perm, t, 0, height_list[j]-y, width_list[j]-x] = 1
-                new_data[perm, t + 1, 1, height_list[j] -
-                         y, width_list[j]-x] = 0
+                if polarity == 0:
+                    new_data[perm, t, 0, height_list[j]-y, width_list[j]-x] = 1
+                    new_data[perm, t + 1, 1, height_list[j] -
+                             y, width_list[j]-x] = 0
+                elif polarity == 1:
+                    new_data[perm, t, 0, height_list[j]-y, width_list[j]-x] = 0
+                    new_data[perm, t + 1, 1, height_list[j] -
+                             y, width_list[j]-x] = 1
+                else:
+                    new_data[perm, t, 0, height_list[j]-y, width_list[j]-x] = 1
+                    new_data[perm, t + 1, 1, height_list[j] -
+                             y, width_list[j]-x] = 1
 
         j += 1
         t += 1
