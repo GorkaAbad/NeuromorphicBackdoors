@@ -189,7 +189,7 @@ class PoisonedDataset(Dataset):
         else:
             # Dynamic trigger
             new_data = create_dynamic_trigger(
-                size_width, size_height, new_data, height, width, perm, pos, self.time_step)
+                size_width, size_height, new_data, height, width, perm, pos, self.time_step, polarity)
         print(
             f'Injecting Over: Bad Imgs: {len(perm)}. Clean Imgs: {len(new_data)-len(perm)}. Epsilon: {epsilon}')
 
@@ -215,7 +215,7 @@ def create_backdoor_data_loader(dataname, trigger_label, epsilon, pos, type, tri
                                     device=device, pos=pos, trigger_type=type, time_step=T,
                                     trigger_size=trigger_size, dataname=dataname, polarity=polarity)
 
-    frame, label = test_data_tri[0]
+    frame, label = test_data_tri[56]
     play_frame(frame, 'backdoor.gif')
 
     train_data_loader = DataLoader(
