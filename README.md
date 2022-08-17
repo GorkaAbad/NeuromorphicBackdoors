@@ -10,7 +10,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-Donwload the datasets [DVS Gesture][https://ibm.ent.box.com/s/3hiq58ww1pbbjrinh367ykfdf60xsfm8/folder/50167556794] and [N-MNIST]https://www.garrickorchard.com/datasets/n-mnist.
+Donwload the datasets [DVS Gesture](https://ibm.ent.box.com/s/3hiq58ww1pbbjrinh367ykfdf60xsfm8/folder/50167556794) and [N-MNIST](https://www.garrickorchard.com/datasets/n-mnist). For more information about the datasets, refer to the [SpikingJelly doc](https://spikingjelly.readthedocs.io/zh_CN/latest/activation_based_en/neuromorphic_datasets.html).
 
 The directory should be like this:
 
@@ -85,10 +85,9 @@ options:
 
 #### Moving Trigger
 
-    ```bash
+```bash
     python main.py -opt adam -loss cross -b 16 -T 16 -dataname gesture -epochs 65 -amp -epsilon 0.1 -polarity 1 -type 1 -pos bottom-right -trigger_size 0.1
-
-````
+```
 
 ### N-MNIST
 
@@ -96,13 +95,10 @@ options:
 
 ```bash
   python main.py -opt adam -loss cross -b 16 -T 16 -dataname gesture -epochs 30 -amp -epsilon 0.001 -polarity 0 -type 0 -pos bottom-right -trigger_size 0.1
-````
+```
 
 #### Moving Trigger
 
-    ```bash
-    python main.py -opt adam -loss cross -b 16 -T 16 -dataname gesture -epochs 30 -amp -epsilon 0.001 -polarity 0 -type 1 -pos middle -trigger_size 0.1
-
-```
-
+```bash
+  python main.py -opt adam -loss cross -b 16 -T 16 -dataname gesture -epochs 30 -amp -epsilon 0.001 -polarity 0 -type 1 -pos middle -trigger_size 0.1
 ```
