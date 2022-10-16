@@ -1,5 +1,7 @@
 # Backdoor Attacks on Spiking NNs and Neuromorphic Datasets
 
+Acepted at CCS'22.
+
 ## Installation
 
 ```bash
